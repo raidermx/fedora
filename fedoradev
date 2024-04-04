@@ -1,0 +1,127 @@
+criar ambiente de desenvolvimento no fedora
+
+instalar o vmware
+instalar o virtualbox e extension pack
+instalar o vagrant
+instalar o helix 
+dnf install helix
+abrir o terminal 
+criar a pasta projetos
+criar uma pasta individual para cada sistema operacional (desktop ou servidor)
+dentro da pasta
+vagrant box add  sistema
+vagrant init sistema
+editar o Vagrantfile dentro da pasta do sistema
+vagrant up para ativar a vm
+vagrant ssh para acessar a vm
+vagrant halt para desligar a vm
+
+vagrant box add fedora/39-cloud-base
+vagrant init fedora/39-cloud-base \ --box-version 39.20231031.1
+substituir o Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.box = "fedora/39-cloud-base"
+  config.vm.box_version = "39.20231031.1"
+end
+vagrant up
+vagrant ssh
+
+0- alterar hostname
+hostnamectl set-hostname fedora39
+
+configurar swap:
+sudo dnf install zram-generator
+sudo vim /etc/sysctl.d/99-sysctl.conf
+vm.swappiness=1
+vm.vfs_cache_pressure=50
+vm.dirty_background_bytes=16777216 
+vm.dirty_bytes=50331648 
+reboot
+
+1 - Habilitar os Mirrors mais rápidos
+Vamos editar o arquivo /etc/dnf/dnf.conf e habilitar os mirrors mais rápidos e aumentar a quantidade de downloads paralelos. Execute os seguintes comandos no terminal:
+sudo echo 'fastestmirror=1' | sudo tee -a /etc/dnf/dnf.conf 
+sudo echo 'max_parallel_downloads=10' | sudo tee -a /etc/dnf/dnf.conf 
+sudo echo 'deltarpm=true' | sudo tee -a /etc/dnf/dnf.conf
+
+2 - Repositórios RPM Fusion
+Free:
+sudo rpm -Uvh https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm 
+Non-free:
+sudo rpm -Uvh https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 
+
+3 - Atualizar o sistema
+sudo dnf upgrade
+sudo dnf upgrade --refresh
+sudo dnf groupupdate core
+sudo dnf install -y rpmfusion-free-release-tainted
+sudo dnf install -y dnf-plugins-core 
+sudo dnf install helix
+
+4 – Instalar Codecs Multimidia
+sudo dnf install amrnb amrwb faad2 flac ffmpeg gpac-libs lame libfc14audiodecoder mencoder mplayer x264 x265 gstreamer-plugins-espeak gstreamer-plugins-bad gstreamer-plugins-bad-nonfree gstreamer-plugins-ugly gstreamer-ffmpeg gstreamer1-plugins-base gstreamer1-libav gstreamer1-plugins-bad-free-extras gstreamer1-plugins-bad-freeworld gstreamer1-plugins-base-tools gstreamer1-plugins-good-extras gstreamer1-plugins-ugly gstreamer1-plugins-bad-free gstreamer1-plugins-good 
+
+5 – Instalar Fontes Microsoft
+sudo dnf install curl cabextract xorg-x11-font-utils fontconfig 
+
+sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm 
+
+5 - Extensões do Gnome e melhorias
+sudo dnf install -y gnome-extensions-app gnome-tweaks 
+sudo dnf install -y gnome-shell-extension-appindicator 
+
+6 – Suporte a pacotes Snap
+sudo dnf install -y snapd
+sudo ln -s /var/lib/snapd/snap /snap # for classic snap support
+(Necessário reiniciar o sistema) 
+Ambiente Dev
+
+7 – Fontes adicionais
+sudo dnf install -y fira-code-fonts 'mozilla-fira*' 'google-roboto*' 
+
+8 – Ferramentas essenciais
+sudo dnf groupinstall "Development Tools"
+sudo dnf install util-linux-user 
+
+9 – Visual Studio Code
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc 
+sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo' 
+sudo dnf check-update 
+sudo dnf install code 
+
+10 - Para instalar a versão mais recente do OpenJDK disponível nos repositórios:
+
+sudo dnf install java-latest-openjdk-devel
+
+11 - uporte para extração e criação de arquivos compactados
+
+ Para poder compactar e extrair arquivos dos mais variados formatos no seu Fedora Workstation, será necessário instalar os pacotes e ferramentas necessárias. Abra um terminal e execute o comando abaixo:
+
+sudo dnf install cabextract lzip p7zip p7zip-plugins unrar
+
+
+12 - Ao trabalhar com documentos criados no Windows, é normal que alguns deles fiquem com fontes ilegíveis e/ou não possam ser visualizados corretamente. Uma possível solução nestes casos é a instalação das Fontes da Microsoft (como Arial, Calibri, Times New Roman, Verdana e outras).
+
+ Para isso, certifique-se que tenha as dependências necessárias instaladas no seu sistema executando o comando abaixo:
+
+sudo dnf install curl cabextract xorg-x11-font-utils fontconfig
+
+ E após, instale o pack de fontes da Microsoft no seu Fedora Workstation executando:
+
+sudo dnf install https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+
+13 - Caso queira instalar o Cockpit no seu Fedora Workstation, abra um terminal e execute o comando abaixo:
+
+sudo dnf install cockpit
+
+ Feito isso, ative-o com:
+
+sudo systemctl enable --now cockpit.socket
+
+ E (se necessário) abra as portas necessárias no firewall:
+
+sudo firewall-cmd --add-service=cockpit && sudo firewall-cmd --add-service=cockpit --permanent
+
+para instalar as ferramentas de desenvolvimento:
+https://developer.fedoraproject.org/
+https://www.blogopcaolinux.com.br/2023/11/Guia-pos-instalacao-Fedora-39-Workstation.html
