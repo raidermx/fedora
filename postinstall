@@ -1,5 +1,108 @@
-atualizar sistema
-sudo dnf update
+Atualizar sistema e firmware
+
+Primeiro:
+
+sudo dnf upgrade --refresh -y
+sudo fwupdmgr refresh --force
+sudo fwupdmgr get-updates
+sudo fwupdmgr update
+
+Reinicie.
+
+Ajustar swappiness
+
+Melhora SSD e responsividade.
+
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf
+
+Aplicar:
+
+sudo sysctl --system
+
+Instalar driver NVIDIA:
+
+sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+
+Reinicie.
+
+Verifique:
+
+nvidia-smi
+
+
 
 instalar fontes microsoft no fedora:
-sudo dnf install curl cabextract xorg-x11-font-utils fontconfig && sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm && sudo fc-cache -v
+sudo dnf install curl cabextract xorg-x11-font-utils fontconfig && sudo dnf install mscore-fonts-all && curl -fLO https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm &&printf '%s  msttcore-fonts-installer-2.6-1.noarch.rpm\n' '55d7f3a86533225634ff3ea2384b4356d9665a29cc7eeacff16602a1714afbb4' | sha256sum -c - && sudo rpm -ivh --nodigest --nofiledigest msttcore-fonts-installer-2.6-1.noarch.rpm && sudo fc-cache -v
+
+
+Multimedia on Fedora
+
+Once RPM Fusion is configured (see https://rpmfusion.org/Configuration)
+
+Switch to full ffmpeg
+
+Fedora ffmpeg-free works most of the time, but one will experience version missmatch from time to time. Switch to the rpmfusion provided ffmpeg build that is better supported. You will still need to follow the next section for additional codecs or plugins related to packages you might have installed.
+
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+
+There you don't need libavcodec-freeworld that is only meant to complement the ffmpeg-free package (and related libraries).
+
+Install additional codec
+
+This will allows the application using the gstreamer framework and other multimedia software, to play others restricted codecs:
+
+    The following command will install the complements multimedia packages needed by gstreamer enabled applications:
+
+    sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+
+
+Hardware Accelerated Codec
+
+Intel(recent)
+
+# Using the rpmfusion-nonfree section
+
+sudo dnf install intel-media-driver
+
+Intel(older)
+
+# Using the rpmfusion-free section
+
+sudo dnf install libva-intel-driver
+
+Hardware codecs with AMD (mesa)
+
+# Using the rpmfusion-free section This is needed since Fedora 37 and later... and mainly concern AMD hardware since NVIDIA hardware with nouveau doesn't work well.
+
+sudo dnf install mesa-va-drivers-freeworld
+
+If using i686 compat libraries (for steam or alikes):
+
+sudo dnf install mesa-va-drivers-freeworld.i686
+
+Hardware codecs with NVIDIA
+
+The Nvidia proprietary driver doesn't support VAAPI natively, but there is a wrapper that can bridge NVDEC/NVENC with VAAPI
+
+sudo dnf install libva-nvidia-driver
+
+You can also install both 32bit and 64bit flavor in one command as needed.
+
+sudo dnf install libva-nvidia-driver.{i686,x86_64}
+
+
+Play a DVD
+
+You need to have the libdvdcss package, to install libdvdcss you need enable tainted repos.
+
+    Tainted free is dedicated for FLOSS packages where some usages might be restricted in some countries.
+
+    sudo dnf install rpmfusion-free-release-tainted
+    sudo dnf install libdvdcss
+
+Various firmwares
+
+    Tainted nonfree is dedicated to non-FLOSS packages without a clear redistribution status by the copyright holder. But is allowed as part of hardware inter-operability between operating systems in some countries :
+
+    sudo dnf install rpmfusion-nonfree-release-tainted
+    sudo dnf --repo=rpmfusion-nonfree-tainted install "*-firmware"
